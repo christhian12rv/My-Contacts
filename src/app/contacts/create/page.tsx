@@ -1,23 +1,23 @@
-'use client'
-
 import ContactForm from '@/components/ContactForm'
+import { sleep } from '@/components/lib/utils';
+import { db } from '@/configs/db';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 export default function CreateContact() {
-	const router = useRouter();
 
-	async function handleSubmit(data: { name: string; email: string; }) {
-		await fetch('/api/contacts', {
-			method: 'POST',
-			body: JSON.stringify(data),
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
+	async function submitAction(formData: FormData) {
+		'use server'
 
-		router.push('/');
+		const data = Object.fromEntries(formData) as { name: string; email: string };
+
+		await sleep();
+		await db.contact.create({
+			data: {
+				name: data.name,
+				email: data.email,
+			},
+		})
 	};
 
 	return (
@@ -30,7 +30,7 @@ export default function CreateContact() {
 
 			<h1 className='text-[2.2em] font-bold mb-[40px]'>Criar contato</h1>
 
-			<ContactForm onSubmit={handleSubmit}/>
+			<ContactForm submitAction={submitAction}/>
 		</div>
 	)
 }

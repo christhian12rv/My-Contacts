@@ -1,9 +1,10 @@
 'use client'
 
-import { FormEvent, useState } from 'react';
+import { useActionState } from 'react';
 import Label from './ui/Label';
 import Input from './ui/Input';
 import Button from './ui/Button';
+import { Loader2Icon } from 'lucide-react';
 
 interface IContactFormProps {
 	contact?: {
@@ -11,35 +12,30 @@ interface IContactFormProps {
 		name: string;
 		email: string;
 	};
-	onSubmit?: (formData: {
-		name: string;
-		email: string;
-	}) => void;
+	submitAction?: (formData: FormData) => void;
 }
 
-export default function ContactForm({ contact, onSubmit }: IContactFormProps) {
-	const [name, setName] = useState(contact?.name ?? '');
-	const [email, setEmail] = useState(contact?.email ?? '');
 
-	function handleSubmit(event: FormEvent<HTMLFormElement>) {
-		event.preventDefault();
-		
-		onSubmit?.({name, email});
-	}
+export default function ContactForm({ contact, submitAction }: IContactFormProps) {
+	const [, clientSubmitAction, isPending] = useActionState(
+		(_: unknown, formData: FormData) => submitAction?.(formData),
+		null
+	)
 
 	return (
-		<form className='space-y-4 w-full' onSubmit={handleSubmit}>
+		<form className='space-y-4 w-full' action={clientSubmitAction}>
 			<div className="flex flex-col space-y-1.5 w-full">
 				<Label>Nome</Label>
-				<Input type='text' name='name' value={name} onChange={(event) => setName(event.target.value)}/>
+				<Input type='text' defaultValue={contact?.name} name='name'/>
 			</div>
 
 			<div className="flex flex-col space-y-1.5">
 				<Label>E-mail</Label>
-				<Input type='email' name='email' value={email} onChange={(event) => setEmail(event.target.value)}/>
+				<Input type='email' defaultValue={contact?.email} name='email'/>
 			</div>
 
-			<Button type='submit'>
+			<Button type='submit' disabled={isPending}>
+				{isPending && <Loader2Icon className="size-4 mr-1 animate-spin"/>}
 				{contact ? 'Editar' : 'Criar'}
 			</Button>
 		</form>

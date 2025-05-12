@@ -1,28 +1,30 @@
-'use client'
-
 import ContactForm from '@/components/ContactForm';
+import { sleep } from '@/components/lib/utils';
+import { db } from '@/configs/db';
 import { Contact } from '@/generated/prisma';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 interface IEditContactForm {
 	contact: Contact
 }
 
 export default function EditContactForm({ contact }: IEditContactForm) {
-	const router = useRouter();
+	async function submitAction(formData: FormData) {
+		'use server'
 
-	async function handleSubmit(data: { name: string; email: string; }) {
-		await fetch(`/api/contacts/${contact.id}`, {
-			method: 'PUT',
-			body: JSON.stringify(data),
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
+		const data = Object.fromEntries(formData) as { name: string; email: string };
 
-		router.push('/');
+		await sleep();
+		await db.contact.update({
+			where: {
+				id: contact.id
+			},
+			data: {
+				name: data.name,
+				email: data.email,
+			},
+		})
 	};
 
 	return (
@@ -35,7 +37,7 @@ export default function EditContactForm({ contact }: IEditContactForm) {
 
 			<h1 className='text-[2.2em] font-bold mb-[40px]'>Editar contato</h1>
 
-			<ContactForm contact={contact} onSubmit={handleSubmit}/>
+			<ContactForm contact={contact} submitAction={submitAction}/>
 		</div>
 	)
 }
