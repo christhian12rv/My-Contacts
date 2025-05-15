@@ -1,27 +1,53 @@
 import ContactForm from '@/components/ContactForm'
-import { sleep } from '@/components/lib/utils';
 import { db } from '@/configs/db';
+import { sleep } from '@/lib/utils';
+import { ActionResponse } from '@/types/ActionResponse';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { z } from 'zod';
+
+const schema = z.object({
+	name: z.string().min(1, 'Nome é obrigatório'),
+	email: z.string().email('Informe um email válido')
+})
 
 export default function CreateContact() {
 
-	async function submitAction(formData: FormData) {
+	async function submitAction(formData: FormData): Promise<ActionResponse> {
 		'use server'
 
-		const data = Object.fromEntries(formData) as { name: string; email: string };
+		const data = Object.fromEntries(formData);
+		const parsedData = schema.safeParse(data);
+
+		if (!parsedData.success) {
+			return {
+				status: 'error',
+				body: {
+					message: parsedData.error.issues.map(issue => issue.message),
+				}
+			};
+		}
+
+		const { name, email } = parsedData.data;
 
 		await sleep();
-		await db.contact.create({
+		const contact =await db.contact.create({
 			data: {
-				name: data.name,
-				email: data.email,
+				name,
+				email,
 			},
-		})
+		});
+
+		return {
+			status: 'success',
+			body: {
+				contact,
+			}
+		}
 	};
 
 	return (
-		<div className='flex flex-col space-y-2 w-full'>
+		<div className='container flex flex-col space-y-2 my-[100px] max-w-lg'>
 			<Link href='/' className='flex items-center gap-2 text-gray-800 hover:text-cyan-700 w-fit
 			transition duration-200 ease-in-out'>
 				<ArrowLeftIcon className='w-4.5 mt-[-2px]' />

@@ -1,14 +1,14 @@
 import { db } from '@/configs/db';
-import { TrashIcon } from '@heroicons/react/24/outline';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import { PlusCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import { DeleteContactDialog } from './_components/DeleteContactDialog';
 
 export default async function Home() {
   const contacts = await db.contact.findMany();
 
   return (
-    <div className='flex flex-col items-center justify-center space-y-[3em] w-full'>
+    <div className='container flex flex-col justify-center space-y-[3em] my-[100px] max-w-lg'>
       <div className='flex items-center flex-wrap justify-between w-full'>
         <div>
           <h1 className='font-bold text-[2em]'>MyContacts</h1>
@@ -32,13 +32,12 @@ export default async function Home() {
               <h4 className='font-bold'>{contact.name}</h4>
               <p>{contact.email}</p>
             </div>
-            <Link href={`/contacts/${contact.id}/edit`} className='flex items-center justify-center border border-gray-200 rounded-lg w-10 h-10 cursor-pointer
-            transition duration-200 ease-in-out hover:bg-gray-200'>
-              <PencilIcon className='w-5' />
-            </Link>
-            <div className='flex items-center justify-center border border-gray-200 rounded-lg w-10 h-10 bg-red-400 text-white
-            transition duration-200 ease-in-out cursor-pointer hover:bg-red-600'>
-              <TrashIcon className='w-5' />
+            <div className="flex items-center justify-center gap-2">
+              <Link href={`/contacts/${contact.id}/edit`} className='flex items-center justify-center border border-gray-200 rounded-lg w-10 h-10 cursor-pointer
+              transition duration-200 ease-in-out hover:bg-gray-200'>
+                <PencilIcon className='w-5' />
+              </Link>
+              <DeleteContactDialog contactId={contact.id}/>
             </div>
           </div>
         ))}

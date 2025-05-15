@@ -1,10 +1,12 @@
 'use client'
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import Label from './ui/Label';
 import Input from './ui/Input';
 import Button from './ui/Button';
 import { Loader2Icon } from 'lucide-react';
+import { ActionResponse } from '@/types/ActionResponse';
+import { useRouter } from 'next/navigation';
 
 interface IContactFormProps {
 	contact?: {
@@ -12,18 +14,36 @@ interface IContactFormProps {
 		name: string;
 		email: string;
 	};
-	submitAction?: (formData: FormData) => void;
+	submitAction: (formData: FormData) => Promise<ActionResponse>;
 }
 
-
 export default function ContactForm({ contact, submitAction }: IContactFormProps) {
-	const [, clientSubmitAction, isPending] = useActionState(
-		(_: unknown, formData: FormData) => submitAction?.(formData),
+	const router = useRouter();
+
+	const [state, clientSubmitAction, isPending] = useActionState(
+		async (_: unknown, formData: FormData) => {
+			const response = await submitAction(formData);
+
+			if (response.status === 'success') {
+				router.push(`/contacts/${response.body.contact.id}/edit`)
+			}
+			
+			return response;
+		},
 		null
 	)
 
+	useEffect(() => {
+
+	}, [state])
+
 	return (
 		<form className='space-y-4 w-full' action={clientSubmitAction}>
+			<span className="text-red-700">
+			{(state?.status === 'error' && state?.body.message) && (Array.isArray(state.body.message) 
+					? state.body.message.join(' / ')
+					: state.body.message)}</span>
+
 			<div className="flex flex-col space-y-1.5 w-full">
 				<Label>Nome</Label>
 				<Input type='text' defaultValue={contact?.name} name='name'/>
